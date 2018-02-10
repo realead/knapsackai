@@ -11,4 +11,5 @@ pip install cython
 pip install numpy
 pip install scipy
 pip install -U scikit-learn
+#pip install matplotlib
 pip install https://github.com/realead/pseudopol/zipball/master
