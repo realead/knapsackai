@@ -12,4 +12,8 @@ pip install numpy
 pip install scipy
 pip install -U scikit-learn
 #pip install matplotlib
+pip install tensorflow
 pip install https://github.com/realead/pseudopol/zipball/master
+
+#show current setup
+pip freeze
