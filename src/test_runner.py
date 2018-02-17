@@ -52,21 +52,15 @@ Scenario = namedtuple('Scenario', ['capacity', 'object_cnt', 'learn_samples_cnt'
 CAPACITY=100
 OBJECT_CNT, LEARN_CNT, TEST_CNT=10, 10**3, 10**3
 
-#scenario 1: high full rate:
-
-print("High full rate:")
-high=Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=24)
-evaluate_scenario(high, strategies)
-
-print("Medium full rate:")
-medium=Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=18)
-evaluate_scenario(medium, strategies)
-
-print("Low full rate:")
-low=Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=13)
-evaluate_scenario(low, strategies)
+scenarios={"high"   : Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=24),
+           "medium" : Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=18),
+           "low"    : Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=13)
+          }
 
 
-
+#evaluation loop:
+for name,sc in scenarios.items():
+   print("Name:", name)
+   evaluate_scenario(sc, strategies)
 
 
