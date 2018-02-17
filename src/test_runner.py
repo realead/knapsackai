@@ -1,4 +1,6 @@
 
+from collections import namedtuple
+
 import numpy as np
 import pseudopol.cpseudopol as c_pp
 
@@ -11,20 +13,20 @@ def evaluate_result(expectedY, receivedY):
    #return (np.sum(error)/error.size, np.max(error))
    
 
-def get_XY(object_cnt, case_cnt, low_val, high_val, capacity):
-    trainX=np.random.randint(low_val, high_val, (case_cnt, object_cnt), dtype=np.uint32)
+def get_XY(sc, case_cnt):
+    trainX=np.random.randint(sc.low_value, sc.high_value, (case_cnt, sc.object_cnt), dtype=np.uint32)
     trainY=np.zeros((case_cnt,), dtype=np.float)#Classifer seems to need it
     for i in range(case_cnt):
-        trainY[i]=c_pp.find_max_subsum(capacity, trainX[i,:])
+        trainY[i]=c_pp.find_max_subsum(sc.capacity, trainX[i,:])
     return trainX, trainY
   
 
-def evaluate_scenario(CAPACITY,N,LEARN_CNT, TEST_CNT, low_val, high_val, funs):
+def evaluate_scenario(scenario, funs):
     results={x:[] for x in funs.keys()}
     sorted_results={x:[] for x in funs.keys()}
     for i in range(1):
-        trainX, trainY=get_XY(N,LEARN_CNT, low_val, high_val,CAPACITY)
-        testX, testY=get_XY(N, TEST_CNT, low_val, high_val,CAPACITY)
+        trainX, trainY=get_XY(scenario, scenario.learn_samples_cnt)
+        testX,   testY=get_XY(scenario, scenario.test_samples_cnt)
         print("full ratio: %f"%(np.count_nonzero(trainY==CAPACITY)/trainY.size))
         for name,fun in funs.items():
             results[name].append(evaluate_result(testY, fun(trainX, trainY, testX)))
@@ -44,22 +46,25 @@ strategies={"RandomForestRegressor":  estimate_with_random_forest_regressor,
            "greedy":lambda x,y,q:estimate_with_greedy(x,y,q,CAPACITY,False),
            "greedy_reversed":lambda x,y,q:estimate_with_greedy(x,y,q,CAPACITY,True)}
 
+Scenario = namedtuple('Scenario', ['capacity', 'object_cnt', 'learn_samples_cnt', 'test_samples_cnt', 'low_value', 'high_value'])
+
 
 CAPACITY=100
-N, LEARN_CNT, TEST_CNT=10, 10**3, 10**3
+OBJECT_CNT, LEARN_CNT, TEST_CNT=10, 10**3, 10**3
 
 #scenario 1: high full rate:
+
 print("High full rate:")
-low_val,high_val=5, 24
-evaluate_scenario(CAPACITY,N,LEARN_CNT, TEST_CNT, low_val, high_val, strategies)
+high=Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=24)
+evaluate_scenario(high, strategies)
 
 print("Medium full rate:")
-low_val,high_val=5, 18
-evaluate_scenario(CAPACITY,N,LEARN_CNT, TEST_CNT, low_val, high_val, strategies)
+medium=Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=18)
+evaluate_scenario(medium, strategies)
 
 print("Low full rate:")
-low_val,high_val=5, 13
-evaluate_scenario(CAPACITY,N,LEARN_CNT, TEST_CNT, low_val, high_val, strategies)
+low=Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=13)
+evaluate_scenario(low, strategies)
 
 
 
