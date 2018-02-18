@@ -24,7 +24,7 @@ def get_XY(sc, case_cnt):
 def evaluate_scenario(scenario, funs):
     results={x:[] for x in funs.keys()}
     sorted_results={x:[] for x in funs.keys()}
-    for i in range(1):
+    for i in range(scenario.run_cnt):
         trainX, trainY=get_XY(scenario, scenario.learn_samples_cnt)
         testX,   testY=get_XY(scenario, scenario.test_samples_cnt)
         print("full ratio: %f"%(np.count_nonzero(trainY==CAPACITY)/trainY.size))
@@ -40,22 +40,59 @@ def evaluate_scenario(scenario, funs):
 
 #### 
 
-#call them with fun(trainx, trainy, testx) to get testy
-strategies={"RandomForestRegressor":  estimate_with_random_forest_regressor,
-           "RandomForestClassifier": estimate_with_random_forest_classifier,
-           "greedy":lambda x,y,q:estimate_with_greedy(x,y,q,CAPACITY,False),
-           "greedy_reversed":lambda x,y,q:estimate_with_greedy(x,y,q,CAPACITY,True)}
-
-Scenario = namedtuple('Scenario', ['capacity', 'object_cnt', 'learn_samples_cnt', 'test_samples_cnt', 'low_value', 'high_value'])
-
-
 CAPACITY=100
-OBJECT_CNT, LEARN_CNT, TEST_CNT=10, 10**3, 10**3
+OBJECT_CNT=10
+ValRange = namedtuple('ValRange', ['low_value', 'high_value'])
 
-scenarios={"high"   : Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=24),
-           "medium" : Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=18),
-           "low"    : Scenario(CAPACITY, OBJECT_CNT, LEARN_CNT,TEST_CNT, low_value=5, high_value=13)
-          }
+
+#call them with fun(trainx, trainy, testx) to get testy
+STRATEGIES={"forest_regressor"  :  estimate_with_random_forest_regressor,
+            "forest_classifier" : estimate_with_random_forest_classifier,
+            "greedy": lambda x,y,q:estimate_with_greedy(x,y,q,CAPACITY,True)
+           }
+
+VAL_RANGES={"high_ratio"   : ValRange(low_value=5, high_value=24),
+            "medium_ratio" : ValRange(low_value=5, high_value=18),
+            "low_ratio"    : ValRange(low_value=5, high_value=13)
+           }
+
+
+###parse command line:
+import argparse
+
+parser = argparse.ArgumentParser(description='run tests for different solution-strategies')
+parser.add_argument('--n_learn', type=int, default=10**3,
+                   help='number of samples for the learning phase')
+parser.add_argument('--n_test', type=int, default=10**3,
+                   help='number of samples for the testing phase')
+parser.add_argument('--n_runs', type=int, default=2,
+                   help='number of runs over which the results are averaged')
+#strategies
+for name in STRATEGIES.keys():
+   parser.add_argument('--'+name, dest='strategies', action='append_const', const=name, help='a possible strategy')
+
+#scenarios
+for name in VAL_RANGES.keys():
+   parser.add_argument('--'+name, dest='scenarios', action='append_const', const=name, help='a possible scenario')
+
+
+args = parser.parse_args()
+
+
+
+#evaluate arguments:
+
+Scenario = namedtuple('Scenario', ['capacity', 'object_cnt', 'learn_samples_cnt', 'test_samples_cnt', 'run_cnt', 'low_value', 'high_value'])
+
+
+strategies = { name : STRATEGIES[name] for name in args.strategies}
+scenarios  = { name : Scenario(CAPACITY, OBJECT_CNT, 
+                               learn_samples_cnt=args.n_learn, test_samples_cnt=args.n_test,
+                               run_cnt=args.n_runs, 
+                               low_value=VAL_RANGES[name].low_value,
+                               high_value=VAL_RANGES[name].high_value)
+                      for name in args.scenarios}
+
 
 
 #evaluation loop:
