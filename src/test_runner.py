@@ -6,6 +6,7 @@ import pseudopol.cpseudopol as c_pp
 
 from random_forest import estimate_with_random_forest_regressor, estimate_with_random_forest_classifier
 from greedy import estimate_with_greedy
+from dnn import estimate_with_dnn
 
 def evaluate_result(expectedY, receivedY):
    error=np.abs(expectedY-receivedY)
@@ -48,7 +49,8 @@ ValRange = namedtuple('ValRange', ['low_value', 'high_value'])
 #call them with fun(trainx, trainy, testx) to get testy
 STRATEGIES={"forest_regressor"  :  estimate_with_random_forest_regressor,
             "forest_classifier" : estimate_with_random_forest_classifier,
-            "greedy": lambda x,y,q:estimate_with_greedy(x,y,q,CAPACITY,True)
+            "greedy": lambda x,y,q:estimate_with_greedy(x,y,q,CAPACITY,True),
+            "dnn": estimate_with_dnn
            }
 
 VAL_RANGES={"high_ratio"   : ValRange(low_value=5, high_value=24),
